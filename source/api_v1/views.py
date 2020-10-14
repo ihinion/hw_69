@@ -1,3 +1,82 @@
+import json
+from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse, HttpResponseBadRequest
 from django.shortcuts import render
+from django.views.generic import View
+from django.views.decorators.csrf import ensure_csrf_cookie
 
-# Create your views here.
+
+@ensure_csrf_cookie
+def get_token_view(request, *args, **kwargs):
+    if request.method == 'GET':
+        return HttpResponse()
+    return HttpResponseNotAllowed('Only GET request are allowed')
+
+
+def get_data(request):
+    data = json.loads(request.body)
+    if not (type(data['A']) == int and type(data['B']) == int):
+        raise TypeError
+    return data
+
+
+class AddView(View):
+    def post(self, request, *args, **kwargs):
+        try:
+            data = get_data(request)
+            result = data['A'] + data['B']
+            return JsonResponse({
+                "answer": result
+            })
+        except Exception as e:
+            response_data = {
+                "error": e.__class__.__name__
+            }
+            return HttpResponseBadRequest(json.dumps(response_data), content_type="application/json")
+
+
+class SubtractView(View):
+    def post(self, request, *args, **kwargs):
+        try:
+            data = get_data(request)
+            result = data['A'] - data['B']
+            return JsonResponse({
+                "answer": result
+            })
+        except Exception as e:
+            response_data = {
+                "error": e.__class__.__name__
+            }
+            return HttpResponseBadRequest(json.dumps(response_data), content_type="application/json")
+
+
+class MultiplyView(View):
+    def post(self, request, *args, **kwargs):
+        try:
+            data = get_data(request)
+            result = data['A'] * data['B']
+            return JsonResponse({
+                "answer": result
+            })
+        except Exception as e:
+            response_data = {
+                "error": e.__class__.__name__
+            }
+            return HttpResponseBadRequest(json.dumps(response_data), content_type="application/json")
+
+
+class DivideView(View):
+    def post(self, request, *args, **kwargs):
+        try:
+            data = get_data(request)
+            if (data['A'] % data['B'] == 0):
+                result = int(data['A'] / data['B'])
+            else:
+                result = data['A'] / data['B']
+            return JsonResponse({
+                "answer": result
+            })
+        except Exception as e:
+            response_data = {
+                "error": e.__class__.__name__
+            }
+            return HttpResponseBadRequest(json.dumps(response_data), content_type="application/json")
