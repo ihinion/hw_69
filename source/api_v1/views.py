@@ -1,4 +1,6 @@
 import json
+from decimal import Decimal
+
 from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse, HttpResponseBadRequest
 from django.shortcuts import render
 from django.views.generic import View
@@ -14,7 +16,10 @@ def get_token_view(request, *args, **kwargs):
 
 def get_data(request):
     data = json.loads(request.body)
-    if not (type(data['A']) == int and type(data['B']) == int):
+    try:
+        data['A'] = int(data['A'])
+        data['B'] = int(data['B'])
+    except:
         raise TypeError
     return data
 
@@ -71,12 +76,12 @@ class DivideView(View):
             if (data['A'] % data['B'] == 0):
                 result = int(data['A'] / data['B'])
             else:
-                result = data['A'] / data['B']
+                result = (data['A'] / data['B'])
+                result = "{:.2f}".format(result)
             return JsonResponse({
                 "answer": result
             })
         except Exception as e:
-            response_data = {
-                "error": e.__class__.__name__
-            }
-            return HttpResponseBadRequest(json.dumps(response_data), content_type="application/json")
+            response = JsonResponse({'error': e.__class__.__name__})
+            response.status_code = 400
+            return response
